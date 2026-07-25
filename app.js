@@ -178,6 +178,20 @@ Promise.all([loadEvent(), loadGifts()]).catch(() => {});
 
 let lastScrollY = window.scrollY;
 let teddyStopTimer;
+let teddyAnimationFrame;
+const teddyFrames = [
+  ['0%', '0%'],
+  ['50%', '0%'],
+  ['100%', '0%'],
+  ['0%', '100%'],
+  ['50%', '100%'],
+  ['100%', '100%']
+];
+
+function setTeddyFrame(teddy, frame) {
+  const [x, y] = teddyFrames[frame];
+  teddy.style.backgroundPosition = `${x} ${y}`;
+}
 
 function updateTeddy() {
   const teddy = $('#scroll-teddy');
@@ -189,13 +203,19 @@ function updateTeddy() {
   const direction = window.scrollY >= lastScrollY ? 1 : -1;
   lastScrollY = window.scrollY;
   teddy.style.transform = `translateY(${targetY}px) scaleX(${direction})`;
-  teddy.classList.add('is-running');
+  setTeddyFrame(teddy, Math.floor(Math.abs(window.scrollY) / 28) % teddyFrames.length);
   clearTimeout(teddyStopTimer);
   teddyStopTimer = setTimeout(() => {
-    teddy.classList.remove('is-running');
-  }, 220);
+    setTeddyFrame(teddy, 1);
+  }, 180);
+  teddyAnimationFrame = undefined;
 }
 
-window.addEventListener('scroll', updateTeddy, { passive:true });
-window.addEventListener('resize', updateTeddy);
+function queueTeddyUpdate() {
+  if (teddyAnimationFrame) return;
+  teddyAnimationFrame = requestAnimationFrame(updateTeddy);
+}
+
+window.addEventListener('scroll', queueTeddyUpdate, { passive:true });
+window.addEventListener('resize', queueTeddyUpdate);
 updateTeddy();
