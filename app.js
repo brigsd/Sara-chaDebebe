@@ -176,9 +176,14 @@ $('#rsvp-form').addEventListener('submit', async (event) => {
 
 Promise.all([loadEvent(), loadGifts()]).catch(() => {});
 
-let lastScrollY = window.scrollY;
-let teddyStopTimer;
 let teddyAnimationFrame;
+let teddyCurrentY = 18;
+let teddyTargetY = 18;
+let teddyLastMotionTime = 0;
+let teddyLastStepTime = 0;
+let teddyFrameIndex = 1;
+const teddySpeed = 210;
+const teddyStepDuration = 190;
 const teddyFrames = [
   ['0%', '0%'],
   ['50%', '0%'],
@@ -193,29 +198,62 @@ function setTeddyFrame(teddy, frame) {
   teddy.style.backgroundPosition = `${x} ${y}`;
 }
 
-function updateTeddy() {
+function animateTeddy(timestamp) {
+  const teddy = $('#scroll-teddy');
+  if (!teddy) {
+    teddyAnimationFrame = undefined;
+    return;
+  }
+
+  if (!teddyLastMotionTime) teddyLastMotionTime = timestamp;
+  const elapsed = Math.min(50, timestamp - teddyLastMotionTime);
+  teddyLastMotionTime = timestamp;
+  const distance = teddyTargetY - teddyCurrentY;
+
+  if (Math.abs(distance) <= .5) {
+    teddyCurrentY = teddyTargetY;
+    teddy.style.transform = `translateY(${teddyCurrentY}px)`;
+    teddyFrameIndex = 1;
+    setTeddyFrame(teddy, teddyFrameIndex);
+    teddyAnimationFrame = undefined;
+    teddyLastMotionTime = 0;
+    teddyLastStepTime = 0;
+    return;
+  }
+
+  const movement = Math.min(Math.abs(distance), teddySpeed * elapsed / 1000);
+  teddyCurrentY += Math.sign(distance) * movement;
+  teddy.style.transform = `translateY(${teddyCurrentY}px)`;
+
+  if (!teddyLastStepTime) {
+    teddyLastStepTime = timestamp;
+  } else if (timestamp - teddyLastStepTime >= teddyStepDuration) {
+    teddyFrameIndex = (teddyFrameIndex + 1) % teddyFrames.length;
+    setTeddyFrame(teddy, teddyFrameIndex);
+    teddyLastStepTime = timestamp;
+  }
+
+  teddyAnimationFrame = requestAnimationFrame(animateTeddy);
+}
+
+function updateTeddyTarget(instant = false) {
   const teddy = $('#scroll-teddy');
   if (!teddy) return;
   const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   const progress = Math.min(1, Math.max(0, window.scrollY / scrollable));
   const travel = Math.max(0, window.innerHeight - teddy.offsetHeight - 36);
-  const targetY = 18 + progress * travel;
-  const direction = window.scrollY >= lastScrollY ? 1 : -1;
-  lastScrollY = window.scrollY;
-  teddy.style.transform = `translateY(${targetY}px) scaleX(${direction})`;
-  setTeddyFrame(teddy, Math.floor(Math.abs(window.scrollY) / 28) % teddyFrames.length);
-  clearTimeout(teddyStopTimer);
-  teddyStopTimer = setTimeout(() => {
+  teddyTargetY = 18 + progress * travel;
+
+  if (instant) {
+    teddyCurrentY = teddyTargetY;
+    teddy.style.transform = `translateY(${teddyCurrentY}px)`;
     setTeddyFrame(teddy, 1);
-  }, 180);
-  teddyAnimationFrame = undefined;
+    return;
+  }
+
+  if (!teddyAnimationFrame) teddyAnimationFrame = requestAnimationFrame(animateTeddy);
 }
 
-function queueTeddyUpdate() {
-  if (teddyAnimationFrame) return;
-  teddyAnimationFrame = requestAnimationFrame(updateTeddy);
-}
-
-window.addEventListener('scroll', queueTeddyUpdate, { passive:true });
-window.addEventListener('resize', queueTeddyUpdate);
-updateTeddy();
+window.addEventListener('scroll', () => updateTeddyTarget(), { passive:true });
+window.addEventListener('resize', () => updateTeddyTarget());
+updateTeddyTarget(true);
