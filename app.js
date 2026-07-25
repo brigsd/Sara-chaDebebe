@@ -61,10 +61,11 @@ function giftCard(gift) {
 async function loadGifts() {
   try {
     const { presentes } = await request('listarPresentes');
-    $('#gift-grid').innerHTML = presentes.map(giftCard).join('');
-    $('#gift-status').textContent = `${presentes.length} sugestões disponíveis para a Sara.`;
+    const visiveis = presentes.filter((gift) => gift.item.trim().toLowerCase() !== 'vale-presente');
+    $('#gift-grid').innerHTML = visiveis.map(giftCard).join('');
+    $('#gift-status').textContent = `${visiveis.length} sugestões disponíveis para a Sara.`;
     document.querySelectorAll('[data-gift]').forEach((button) => button.addEventListener('click', () => {
-      selectedGift = presentes.find((gift) => gift.id === button.dataset.gift);
+      selectedGift = visiveis.find((gift) => gift.id === button.dataset.gift);
       $('#dialog-title').textContent = selectedGift.item;
       $('#gift-message').textContent = '';
       $('#gift-dialog').showModal();
