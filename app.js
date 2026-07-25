@@ -63,7 +63,6 @@ async function loadGifts() {
     const { presentes } = await request('listarPresentes');
     const visiveis = presentes.filter((gift) => gift.item.trim().toLowerCase() !== 'vale-presente');
     $('#gift-grid').innerHTML = visiveis.map(giftCard).join('');
-    $('#gift-status').textContent = `${visiveis.length} sugestões disponíveis para a Sara.`;
     document.querySelectorAll('[data-gift]').forEach((button) => button.addEventListener('click', () => {
       selectedGift = visiveis.find((gift) => gift.id === button.dataset.gift);
       $('#dialog-title').textContent = selectedGift.item;
@@ -72,7 +71,7 @@ async function loadGifts() {
     }));
     document.querySelectorAll('[data-cancel-gift]').forEach((button) => button.addEventListener('click', cancelReservation));
   } catch (error) {
-    $('#gift-status').textContent = 'Não foi possível carregar os presentes agora. Tente novamente em alguns instantes.';
+    $('#gift-grid').innerHTML = '<p>Não foi possível carregar os presentes agora. Tente novamente em alguns instantes.</p>';
   }
 }
 
@@ -110,7 +109,7 @@ async function cancelReservation() {
       localStorage.removeItem(selectedGiftKey);
       await loadGifts();
     } else {
-      $('#gift-status').textContent = error.message;
+      alert(error.message);
     }
   } finally {
     button.disabled = false;
