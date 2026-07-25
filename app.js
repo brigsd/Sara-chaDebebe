@@ -5,6 +5,19 @@ let selectedGift = null;
 
 const $ = (selector) => document.querySelector(selector);
 const escapeHtml = (text = '') => String(text).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+const savedGift = () => {
+  try { return JSON.parse(localStorage.getItem(selectedGiftKey) || 'null'); } catch { return null; }
+};
+
+function showMyGift(presents) {
+  const saved = savedGift();
+  const card = $('#my-gift');
+  if (!saved) { card.hidden = true; return; }
+  const gift = presents.find((item) => item.id === saved.itemId);
+  if (!gift) { localStorage.removeItem(selectedGiftKey); card.hidden = true; return; }
+  $('#my-gift-name').textContent = gift.item;
+  card.hidden = false;
+}
 
 async function request(action, data = {}) {
   const response = await fetch(API_URL, {
@@ -56,6 +69,7 @@ async function loadGifts() {
     const { presentes } = await request('listarPresentes');
     $('#gift-grid').innerHTML = presentes.map(giftCard).join('');
     $('#gift-status').textContent = `${presentes.length} sugestões disponíveis para a Sara.`;
+    showMyGift(presentes);
     document.querySelectorAll('[data-gift]').forEach((button) => button.addEventListener('click', () => {
       selectedGift = presentes.find((gift) => gift.id === button.dataset.gift);
       $('#dialog-title').textContent = selectedGift.item;
@@ -75,6 +89,7 @@ $('#confirm-gift').addEventListener('click', async () => {
   try {
     const { token, mensagem } = await request('reservar', { itemId: selectedGift.id });
     localStorage.setItem(selectedGiftKey, JSON.stringify({ token, itemId: selectedGift.id }));
+    showMyGift([selectedGift]);
     $('#gift-message').textContent = mensagem;
     setTimeout(() => { $('#gift-dialog').close(); loadGifts(); }, 1000);
   } catch (error) {
@@ -82,6 +97,31 @@ $('#confirm-gift').addEventListener('click', async () => {
   } finally {
     button.disabled = false;
     button.textContent = 'Confirmar escolha';
+  }
+});
+
+$('#cancel-gift').addEventListener('click', async () => {
+  const saved = savedGift();
+  if (!saved) return;
+  const button = $('#cancel-gift');
+  button.disabled = true;
+  button.textContent = 'Desfazendo...';
+  try {
+    await request('cancelarReserva', { token: saved.token });
+    localStorage.removeItem(selectedGiftKey);
+    $('#my-gift').hidden = true;
+    await loadGifts();
+  } catch (error) {
+    if (/não encontrada|já cancelada/i.test(error.message)) {
+      localStorage.removeItem(selectedGiftKey);
+      $('#my-gift').hidden = true;
+      await loadGifts();
+    } else {
+      $('#gift-status').textContent = error.message;
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Desfazer minha escolha';
   }
 });
 
