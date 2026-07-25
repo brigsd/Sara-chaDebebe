@@ -175,20 +175,26 @@ $('#rsvp-form').addEventListener('submit', async (event) => {
 
 Promise.all([loadEvent(), loadGifts()]).catch(() => {});
 
-let teddyOffset = 0;
 let lastScrollY = window.scrollY;
 let teddyStopTimer;
-window.addEventListener('scroll', () => {
+
+function updateTeddy() {
   const teddy = $('#scroll-teddy');
-  const delta = window.scrollY - lastScrollY;
+  if (!teddy) return;
+  const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  const progress = Math.min(1, Math.max(0, window.scrollY / scrollable));
+  const travel = Math.max(0, window.innerHeight - teddy.offsetHeight - 36);
+  const targetY = 18 + progress * travel;
+  const direction = window.scrollY >= lastScrollY ? 1 : -1;
   lastScrollY = window.scrollY;
-  teddyOffset = Math.max(-52, Math.min(52, teddyOffset + delta * .14));
-  teddy.style.transform = `translateY(${teddyOffset}px) scaleX(${delta > 0 ? 1 : -1})`;
+  teddy.style.transform = `translateY(${targetY}px) scaleX(${direction})`;
   teddy.classList.add('is-running');
   clearTimeout(teddyStopTimer);
   teddyStopTimer = setTimeout(() => {
-    teddyOffset = 0;
-    teddy.style.transform = 'translateY(0) scaleX(1)';
     teddy.classList.remove('is-running');
-  }, 180);
-}, { passive:true });
+  }, 220);
+}
+
+window.addEventListener('scroll', updateTeddy, { passive:true });
+window.addEventListener('resize', updateTeddy);
+updateTeddy();
