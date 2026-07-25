@@ -9,16 +9,6 @@ const savedGift = () => {
   try { return JSON.parse(localStorage.getItem(selectedGiftKey) || 'null'); } catch { return null; }
 };
 
-function showMyGift(presents) {
-  const saved = savedGift();
-  const card = $('#my-gift');
-  if (!saved) { card.hidden = true; return; }
-  const gift = presents.find((item) => item.id === saved.itemId);
-  if (!gift) { localStorage.removeItem(selectedGiftKey); card.hidden = true; return; }
-  $('#my-gift-name').textContent = gift.item;
-  card.hidden = false;
-}
-
 async function request(action, data = {}) {
   const response = await fetch(API_URL, {
     method: 'POST',
@@ -55,12 +45,16 @@ async function loadEvent() {
 }
 
 function giftCard(gift) {
+  const mine = savedGift()?.itemId === gift.id;
   const unavailable = gift.disponivel < 1;
-  return `<article class="gift-card ${unavailable ? 'is-reserved' : ''}">
+  const button = mine
+    ? '<button class="button button-soft" type="button" data-cancel-gift>Desfazer minha escolha</button>'
+    : `<button class="button ${unavailable ? 'button-soft' : 'button-primary'}" type="button" data-gift="${escapeHtml(gift.id)}" ${unavailable ? 'disabled' : ''}>${unavailable ? 'Já escolhido' : 'Vou presentear'}</button>`;
+  return `<article class="gift-card ${unavailable && !mine ? 'is-reserved' : ''} ${mine ? 'is-mine' : ''}">
     <img class="gift-image" src="${escapeHtml(gift.imagem)}" alt="" loading="lazy" />
     <div class="gift-body"><h3>${escapeHtml(gift.item)}</h3><p>${escapeHtml(gift.descricao)}</p>
-    <p class="availability">${unavailable ? 'Já escolhido' : `${gift.disponivel} disponível`}</p>
-    <button class="button ${unavailable ? 'button-soft' : 'button-primary'}" type="button" data-gift="${escapeHtml(gift.id)}" ${unavailable ? 'disabled' : ''}>${unavailable ? 'Já escolhido' : 'Vou presentear'}</button></div>
+    <p class="availability">${mine ? 'Escolhido por você' : unavailable ? 'Já escolhido' : `${gift.disponivel} disponível`}</p>
+    ${button}</div>
   </article>`;
 }
 
@@ -69,13 +63,13 @@ async function loadGifts() {
     const { presentes } = await request('listarPresentes');
     $('#gift-grid').innerHTML = presentes.map(giftCard).join('');
     $('#gift-status').textContent = `${presentes.length} sugestões disponíveis para a Sara.`;
-    showMyGift(presentes);
     document.querySelectorAll('[data-gift]').forEach((button) => button.addEventListener('click', () => {
       selectedGift = presentes.find((gift) => gift.id === button.dataset.gift);
       $('#dialog-title').textContent = selectedGift.item;
       $('#gift-message').textContent = '';
       $('#gift-dialog').showModal();
     }));
+    document.querySelectorAll('[data-cancel-gift]').forEach((button) => button.addEventListener('click', cancelReservation));
   } catch (error) {
     $('#gift-status').textContent = 'Não foi possível carregar os presentes agora. Tente novamente em alguns instantes.';
   }
@@ -89,7 +83,6 @@ $('#confirm-gift').addEventListener('click', async () => {
   try {
     const { token, mensagem } = await request('reservar', { itemId: selectedGift.id });
     localStorage.setItem(selectedGiftKey, JSON.stringify({ token, itemId: selectedGift.id }));
-    showMyGift([selectedGift]);
     $('#gift-message').textContent = mensagem;
     setTimeout(() => { $('#gift-dialog').close(); loadGifts(); }, 1000);
   } catch (error) {
@@ -100,21 +93,20 @@ $('#confirm-gift').addEventListener('click', async () => {
   }
 });
 
-$('#cancel-gift').addEventListener('click', async () => {
+async function cancelReservation() {
   const saved = savedGift();
   if (!saved) return;
-  const button = $('#cancel-gift');
+  const button = document.querySelector('[data-cancel-gift]');
+  if (!button) return;
   button.disabled = true;
   button.textContent = 'Desfazendo...';
   try {
     await request('cancelarReserva', { token: saved.token });
     localStorage.removeItem(selectedGiftKey);
-    $('#my-gift').hidden = true;
     await loadGifts();
   } catch (error) {
     if (/não encontrada|já cancelada/i.test(error.message)) {
       localStorage.removeItem(selectedGiftKey);
-      $('#my-gift').hidden = true;
       await loadGifts();
     } else {
       $('#gift-status').textContent = error.message;
@@ -123,7 +115,7 @@ $('#cancel-gift').addEventListener('click', async () => {
     button.disabled = false;
     button.textContent = 'Desfazer minha escolha';
   }
-});
+}
 
 document.querySelectorAll('input[name="resposta"]').forEach((input) => input.addEventListener('change', () => {
   $('#party-size-label').hidden = document.querySelector('input[name="resposta"]:checked').value !== 'sim';
