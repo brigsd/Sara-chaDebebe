@@ -9,6 +9,34 @@ const savedGift = () => {
   try { return JSON.parse(localStorage.getItem(selectedGiftKey) || 'null'); } catch { return null; }
 };
 
+function celebrateGift() {
+  const layer = $('#celebration');
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const symbols = ['♥', '♡', '✦', '✧', '★'];
+  for (let index = 0; index < 18; index += 1) {
+    const angle = (Math.PI * 2 * index / 18) + (Math.random() - .5) * .28;
+    const dx = Math.cos(angle) || .01;
+    const dy = Math.sin(angle) || .01;
+    const distance = Math.min((width / 2 - 12) / Math.abs(dx), (height / 2 - 12) / Math.abs(dy));
+    const particle = document.createElement('span');
+    const x = dx * distance;
+    const y = dy * distance;
+    particle.className = 'celebration-particle';
+    particle.textContent = symbols[index % symbols.length];
+    particle.style.color = index % 2 ? '#e97d98' : '#f6b263';
+    particle.style.setProperty('--x', `${x}px`);
+    particle.style.setProperty('--y', `${y}px`);
+    particle.style.setProperty('--bounce-x', `${x * .86}px`);
+    particle.style.setProperty('--bounce-y', `${y * .86}px`);
+    particle.style.setProperty('--end-x', `${x * .92}px`);
+    particle.style.setProperty('--end-y', `${y * .92}px`);
+    particle.style.setProperty('--spin', `${(Math.random() * 340 - 170).toFixed(0)}deg`);
+    layer.appendChild(particle);
+    particle.addEventListener('animationend', () => particle.remove());
+  }
+}
+
 async function request(action, data = {}) {
   const response = await fetch(API_URL, {
     method: 'POST',
@@ -91,6 +119,7 @@ $('#confirm-gift').addEventListener('click', async () => {
   try {
     const { token, mensagem } = await request('reservar', { itemId: selectedGift.id, quantidade });
     localStorage.setItem(selectedGiftKey, JSON.stringify({ token, itemId: selectedGift.id, quantidade }));
+    celebrateGift();
     $('#gift-message').textContent = mensagem;
     setTimeout(() => { $('#gift-dialog').close(); loadGifts(); }, 1000);
   } catch (error) {
@@ -145,3 +174,21 @@ $('#rsvp-form').addEventListener('submit', async (event) => {
 });
 
 Promise.all([loadEvent(), loadGifts()]).catch(() => {});
+
+let teddyOffset = 0;
+let lastScrollY = window.scrollY;
+let teddyStopTimer;
+window.addEventListener('scroll', () => {
+  const teddy = $('#scroll-teddy');
+  const delta = window.scrollY - lastScrollY;
+  lastScrollY = window.scrollY;
+  teddyOffset = Math.max(-52, Math.min(52, teddyOffset + delta * .14));
+  teddy.style.transform = `translateY(${teddyOffset}px) scaleX(${delta > 0 ? 1 : -1})`;
+  teddy.classList.add('is-running');
+  clearTimeout(teddyStopTimer);
+  teddyStopTimer = setTimeout(() => {
+    teddyOffset = 0;
+    teddy.style.transform = 'translateY(0) scaleX(1)';
+    teddy.classList.remove('is-running');
+  }, 180);
+}, { passive:true });
