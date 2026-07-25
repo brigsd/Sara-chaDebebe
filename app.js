@@ -66,6 +66,9 @@ async function loadGifts() {
     document.querySelectorAll('[data-gift]').forEach((button) => button.addEventListener('click', () => {
       selectedGift = visiveis.find((gift) => gift.id === button.dataset.gift);
       $('#dialog-title').textContent = selectedGift.item;
+      $('#gift-quantity').value = 1;
+      $('#gift-quantity').max = selectedGift.disponivel;
+      $('#gift-quantity-help').textContent = `${selectedGift.disponivel} unidade${selectedGift.disponivel > 1 ? 's disponíveis' : ' disponível'}.`;
       $('#gift-message').textContent = '';
       $('#gift-dialog').showModal();
     }));
@@ -78,11 +81,16 @@ async function loadGifts() {
 $('#confirm-gift').addEventListener('click', async () => {
   if (!selectedGift) return;
   const button = $('#confirm-gift');
+  const quantidade = Math.max(1, Math.floor(Number($('#gift-quantity').value) || 1));
+  if (quantidade > selectedGift.disponivel) {
+    $('#gift-message').textContent = 'Escolha uma quantidade disponível.';
+    return;
+  }
   button.disabled = true;
   button.textContent = 'Confirmando...';
   try {
-    const { token, mensagem } = await request('reservar', { itemId: selectedGift.id });
-    localStorage.setItem(selectedGiftKey, JSON.stringify({ token, itemId: selectedGift.id }));
+    const { token, mensagem } = await request('reservar', { itemId: selectedGift.id, quantidade });
+    localStorage.setItem(selectedGiftKey, JSON.stringify({ token, itemId: selectedGift.id, quantidade }));
     $('#gift-message').textContent = mensagem;
     setTimeout(() => { $('#gift-dialog').close(); loadGifts(); }, 1000);
   } catch (error) {
