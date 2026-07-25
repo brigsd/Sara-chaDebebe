@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e97d98" />
+    <meta name="description" content="Chá de Fraldas da Sara" />
+    <title>Chá de Fraldas da Sara</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#evento">Ir para o conteúdo</a>
+    <header class="hero" id="inicio">
+      <div class="sparkles" aria-hidden="true">✦　♡　✧　★　♡　✦　✧</div>
+      <div class="hero-content">
+        <p class="eyebrow">Um dia muito especial está chegando</p>
+        <h1>Chá de Fraldas<br /><em>da Sara</em></h1>
+        <p class="hero-copy">Nossa pequena princesa já é muito amada.<br />Venha celebrar esse momento com a gente!</p>
+        <div class="hero-actions">
+          <a class="button button-light" href="#presenca">Confirmar presença</a>
+          <a class="button button-outline" href="#presentes">Ver sugestões</a>
+        </div>
+      </div>
+      <div class="balloon balloon-one" aria-hidden="true"></div>
+      <div class="balloon balloon-two" aria-hidden="true"></div>
+      <div class="teddy" aria-hidden="true">🧸</div>
+      <nav class="quick-nav" aria-label="Navegação rápida">
+        <a href="#inicio">Início</a>
+        <a href="#evento">Evento</a>
+        <a href="#presenca">Presença</a>
+        <a href="#presentes">Presentes</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="welcome section-narrow">
+        <p class="eyebrow">Chá de Fraldas</p>
+        <h2>Olá, família e amigos!</h2>
+        <p>Preparamos este cantinho com carinho para dividir a alegria da chegada da Sara. Aqui vocês encontram as informações do encontro e algumas sugestões de presentes.</p>
+        <p class="note">Os presentes são apenas sugestões: compre onde preferir. Ao escolher um item, marque-o aqui para evitar repetições.</p>
+      </section>
+
+      <section class="section card-section" id="evento">
+        <div class="section-heading">
+          <p class="eyebrow">Guarde esta data</p>
+          <h2>Informações do evento</h2>
+        </div>
+        <div class="event-grid">
+          <article class="event-item">
+            <span class="event-icon" aria-hidden="true">◷</span>
+            <div><p class="event-label">Data e horário</p><strong id="event-date">Carregando...</strong></div>
+          </article>
+          <article class="event-item">
+            <span class="event-icon" aria-hidden="true">⌖</span>
+            <div><p class="event-label">Local</p><strong id="event-address">Carregando...</strong></div>
+          </article>
+          <article class="event-item event-observation">
+            <span class="event-icon" aria-hidden="true">i</span>
+            <div><p class="event-label">Observações</p><span id="event-note">Carregando...</span></div>
+          </article>
+        </div>
+        <div class="event-actions">
+          <button class="button button-soft" id="copy-address" type="button">Copiar endereço</button>
+          <a class="button button-soft" id="google-calendar" href="#" target="_blank" rel="noopener">Adicionar ao Google Agenda</a>
+        </div>
+      </section>
+
+      <section class="section card-section" id="presenca">
+        <div class="section-heading">
+          <p class="eyebrow">Vamos nos encontrar?</p>
+          <h2>Confirmar presença</h2>
+          <p>Não precisamos de nome, telefone ou e-mail. Informe apenas quantas pessoas vão com você.</p>
+        </div>
+        <form class="rsvp-form" id="rsvp-form">
+          <fieldset>
+            <legend>Você poderá ir?</legend>
+            <label class="choice"><input type="radio" name="resposta" value="sim" required /> <span>Sim, vou ao evento</span></label>
+            <label class="choice"><input type="radio" name="resposta" value="nao" /> <span>Não vou conseguir ir</span></label>
+          </fieldset>
+          <label class="party-size" id="party-size-label">Quantas pessoas irão, contando você?
+            <input id="party-size" name="quantidade" type="number" min="1" max="20" value="1" inputmode="numeric" />
+          </label>
+          <button class="button button-primary" type="submit">Enviar resposta</button>
+          <p class="form-message" id="rsvp-message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="section gifts-section" id="presentes">
+        <div class="section-heading">
+          <p class="eyebrow">Com muito carinho</p>
+          <h2>Sugestões de presentes</h2>
+          <p>Escolha o que fizer sentido para você. Não há compra nem pagamento por aqui.</p>
+        </div>
+        <div class="gift-status" id="gift-status" aria-live="polite">Carregando sugestões...</div>
+        <div class="gift-grid" id="gift-grid"></div>
+      </section>
+    </main>
+
+    <dialog class="gift-dialog" id="gift-dialog">
+      <form method="dialog" class="dialog-content">
+        <button class="dialog-close" value="cancel" aria-label="Fechar">×</button>
+        <p class="eyebrow">Sugestão escolhida</p>
+        <h2 id="dialog-title">Presente</h2>
+        <p>Ao confirmar, ele ficará marcado como escolhido para os demais convidados. Você poderá comprar onde quiser.</p>
+        <div class="dialog-actions">
+          <button class="button button-soft" value="cancel">Voltar</button>
+          <button class="button button-primary" id="confirm-gift" value="default" type="button">Confirmar escolha</button>
+        </div>
+        <p class="form-message" id="gift-message" aria-live="polite"></p>
+      </form>
+    </dialog>
+
+    <footer>Feito com carinho para a chegada da Sara ♡</footer>
+    <script src="app.js"></script>
+  </body>
+</html>
