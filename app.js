@@ -25,6 +25,7 @@ function celebrateGift() {
     particle.className = 'celebration-particle';
     particle.textContent = symbols[index % symbols.length];
     particle.style.color = index % 2 ? '#e97d98' : '#f6b263';
+    particle.style.animationDelay = `${(Math.random() * .5).toFixed(2)}s`;
     particle.style.setProperty('--x', `${x}px`);
     particle.style.setProperty('--y', `${y}px`);
     particle.style.setProperty('--bounce-x', `${x * .86}px`);
@@ -81,7 +82,7 @@ function giftCard(gift) {
   return `<article class="gift-card ${unavailable && !mine ? 'is-reserved' : ''} ${mine ? 'is-mine' : ''}">
     <img class="gift-image" src="${escapeHtml(gift.imagem)}" alt="" loading="lazy" />
     <div class="gift-body"><h3>${escapeHtml(gift.item)}</h3><p>${escapeHtml(gift.descricao)}</p>
-    <p class="availability">${mine ? 'Escolhido por você' : unavailable ? 'Já escolhido' : `${gift.disponivel} disponível`}</p>
+    <p class="availability">${mine ? 'Escolhido por você' : unavailable ? 'Já escolhido' : `${gift.disponivel} ${gift.disponivel === 1 ? 'disponível' : 'disponíveis'}`}</p>
     ${button}</div>
   </article>`;
 }
