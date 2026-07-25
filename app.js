@@ -182,8 +182,8 @@ let teddyTargetY = 18;
 let teddyLastMotionTime = 0;
 let teddyLastStepTime = 0;
 let teddyFrameIndex = 1;
-const teddySpeed = 210;
-const teddyStepDuration = 190;
+const teddySpeed = 105;
+const teddyStepDuration = 240;
 const teddyFrames = [
   ['0%', '0%'],
   ['50%', '0%'],
@@ -196,6 +196,28 @@ const teddyFrames = [
 function setTeddyFrame(teddy, frame) {
   const [x, y] = teddyFrames[frame];
   teddy.style.backgroundPosition = `${x} ${y}`;
+}
+
+function releaseTeddyParticle() {
+  const teddy = $('#scroll-teddy');
+  const layer = $('#celebration');
+  if (!teddy || !layer) return;
+  const rect = teddy.getBoundingClientRect();
+  const particle = document.createElement('span');
+  const drift = Math.round(Math.random() * 70 - 35);
+  const rise = -Math.round(95 + Math.random() * 55);
+  particle.className = 'teddy-particle';
+  particle.textContent = ['♡', '♥', '✦', '★'][Math.floor(Math.random() * 4)];
+  particle.style.left = `${rect.left + rect.width / 2}px`;
+  particle.style.top = `${rect.top + rect.height * .35}px`;
+  particle.style.setProperty('--particle-color', ['#e97d98', '#f0a0b3', '#efb15f', '#d86d8d'][Math.floor(Math.random() * 4)]);
+  particle.style.setProperty('--drift', `${drift}px`);
+  particle.style.setProperty('--drift-end', `${drift + Math.round(Math.random() * 20 - 10)}px`);
+  particle.style.setProperty('--rise', `${rise}px`);
+  particle.style.setProperty('--rise-end', `${rise - 28}px`);
+  particle.style.setProperty('--spin', `${Math.round(Math.random() * 50 - 25)}deg`);
+  layer.appendChild(particle);
+  particle.addEventListener('animationend', () => particle.remove(), { once:true });
 }
 
 function animateTeddy(timestamp) {
@@ -256,4 +278,5 @@ function updateTeddyTarget(instant = false) {
 
 window.addEventListener('scroll', () => updateTeddyTarget(), { passive:true });
 window.addEventListener('resize', () => updateTeddyTarget());
+$('#scroll-teddy').addEventListener('click', releaseTeddyParticle);
 updateTeddyTarget(true);
